@@ -1,0 +1,55 @@
+# C++20 Module Caches (GCC / Clang / MSVC)
+gcm.cache/
+*.pcm
+*.ifc
+
+# Compiled Object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic & Static Libraries
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.lai
+*.la
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build Directories (CMake, Meson, etc.)
+build/
+cmake-build-*/
+out/
+bin/
+lib/
+
+# CMake Generated Files (if built in-source)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+
+# IDE & Editor Folders
+.vscode/
+.vs/
+.idea/
+*.user
+*.suo
+*.sln.docstates
+
+# OS Files
+.DS_Store
+Thumbs.db
