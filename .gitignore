@@ -1,4 +1,4 @@
-# C++20 Module Caches (GCC / Clang / MSVC)
+# C++20 Module Caches (GCC)
 gcm.cache/
 *.pcm
 *.ifc
