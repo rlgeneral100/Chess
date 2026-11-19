@@ -16,6 +16,8 @@ public:
 	ChessBoard();
 	// void print(); // Or the << operator overide?
 	friend std::ostream& operator<<(std::ostream& os, const ChessBoard& board); // Either this or the above
+	void clearBoard();
+	void setSlot(const std::string& coord, char piece);
 	void resetSlot(const std::string& coord);
 	char getSlot(const std::string& input) const; // input can be a4, c3, etc...
 	void moveToSlot(const std::string& init, const std::string& dest); // Move a piece from initial coordinates to destination coordinates
@@ -24,7 +26,7 @@ public:
 // Initializes the ChessBoard
 ChessBoard::ChessBoard() {
 	// The following is temporary as there is the setup option that can overide this
-    const char startRows[8][8] = {
+    const char onStart[8][8] = {
         {'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'}, // 8 (row 0) - Black pieces
         {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'}, // 7 (row 1)
         {'_', '_', '_', '_', '_', '_', '_', '_'}, // 6 (row 2)
@@ -38,7 +40,7 @@ ChessBoard::ChessBoard() {
 
     for (int row = 0; row < 8; ++row) {
         for (int col = 0; col < 8; ++col) {
-            grid[row][col] = startRows[row][col];
+            grid[row][col] = onStart[row][col];
         }
     }
 }
@@ -54,6 +56,21 @@ std::ostream& operator<<(std::ostream& os, const ChessBoard& board) {
     }
     os << "  a b c d e f g h\n"; // Col labels
     return os;
+}
+
+// Clears the entire board - Obviously duh
+void ChessBoard::clearBoard() {
+    for (int row = 0; row < 8; ++row) {
+        for (int col = 0; col < 8; ++col) {
+            grid[row][col] = '_';
+        }
+    }
+}
+
+// Place a specific piece at a specific coordinate
+void ChessBoard::setSlot(const std::string& coord, char piece) {
+    Coordinate curr = convertCoordinate(coord);
+    grid[curr.row][curr.col] = piece;
 }
 
 // Reset a coordinate to have nothing
