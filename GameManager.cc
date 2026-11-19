@@ -45,11 +45,26 @@ void GameManager::runGame() {
 						
 					// The following will decide how the game goes based on what players 1 and 2 are, human vs computer
 					// To be implemented
+					// White space trimming required
+					if (playerOne.starts_with("computer")) {
+						// Implementation of the AI class?
+					} else {
+						// Human player
+					}
+					
+					if (playerTwo.starts_with("computer")) {
+						// Implementation of AI class
+					} else {
+						// Human player
+					}
 				} else {
 					std::cout << "Invalid command \n";
 				}
 			} else {
 				std::cout << "Invalid command \n";
+			} else if (gameInput == "resign") {
+				gameOn = false;
+				// Some reset game function needs to be called
 			}
 		}
 	}
