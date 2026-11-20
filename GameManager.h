@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "ChessBoard.h"
 
 class GameManager {
 	ChessBoard board;
@@ -14,8 +15,9 @@ class GameManager {
 	// Some of the following may be public candidates
 	/*static?*/ bool validPiece(const std::string& piece) const; // This could be static
 	/*static?*/ bool validPos(const std::string& pos) const;
+	bool validGame(std::istringstream& input);
 	void setupManager(const std::string& s, std::istringstream& input); // Controls altered setup commands
-	void startGameManager(std::istringstream& input); // Sets up ChessBoard for a new game
+	void gameOnManager(const std::string&s, std::istringstream& input); // Sets up ChessBoard for a new game
 	void resignManager(); // Performs necessary resets following a resign
 	void invalidInput() const; // Prints statement when input is invalid
 	

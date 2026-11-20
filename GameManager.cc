@@ -1,3 +1,4 @@
+#include <sstream>
 #include "GameManager.h"
 #include "ChessBoard.h"
 
@@ -27,6 +28,7 @@ bool GameManager::validPos(const std::string& pos) const {
 		return false;
 	}
 	
+	// The horizontal position, letters
 	switch (pos[0]) {
 		case 'a':
 		case 'b':
@@ -41,6 +43,7 @@ bool GameManager::validPos(const std::string& pos) const {
 			return false;
 	}
 	
+	// The vertical position, integer 1-8
 	if (1 <= pos[1] - '0' && pos[1] - '0' <= 8) {
 		return true;
 	}
@@ -48,6 +51,24 @@ bool GameManager::validPos(const std::string& pos) const {
 	return false;
 }
 
+bool GameManager::validGame(std::istringstream& input) {
+	std::string player1, player2;
+	
+	if (!(input >> player1 >> player2)) {
+		return false;
+	}
+	
+	if ((player1 == "human" || player1.starts_with("computer")) &&
+		(player2 == "human" || player2.starts_with("computer"))) {
+		return true;	
+	}
+	
+	return false;
+}
+
+/* The issue is that we could either permanently save the setup
+until game is turned off or that it only lasts one round. Not
+sure which one, I think the former but it would be slightly more work*/
 void GameManager::setupManager(const std::string& s, std::istringstream& input) {
 	if (s == "+") {
 		std::string piece, pos;
@@ -62,7 +83,7 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		}
 		
 		// Sets the piece on the board
-		board.setSlot(pos, piece);
+		board.setSlot(pos, piece[0]);
 	} else if (s == "-") {
 		std::string pos;
 		// The following checks if input are valid
@@ -98,12 +119,13 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 	}
 }
 
-void GameManager::startGameManager(std::istringstream& input) {
-	
+void GameManager::gameOnManager(const std::string&s, std::istringstream& input) {
+	// To be implemented, complex
 }
 
 void GameManager::resignManager() {
-	
+	gameOn = false;
+	board.resetBoard();
 }
 
 void GameManager::invalidInput() const {
@@ -125,18 +147,20 @@ void GameManager::runGame() {
 		if (setupOn) {
 			setupManager(s, input);
 			continue; // We skip the rest if on setup mode
+		} else if (gameOn) {
+			gameOnManager(s, input);
+			continue;
 		}
 
 		if (s == "setup") {
-			if (!gameOn) {
-				setupOn = true;
-			} else {
-				std::cout << "Game going\n";
-			}
+			setupOn = true;
 		} else if (s == "game") {
-			startGameManager(input);
-		} else if (s == "resign") {
-			resignManager();
+			if (validGame(input)) {
+				gameOn = true;
+				board.resetBoard();
+			} else {
+				invalidInput();
+			}
 		} else {
 			invalidInput(); // This is a function so that it is easier to change the invalid message
 		}
