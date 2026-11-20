@@ -1,25 +1,18 @@
 #include "ChessBoard.h"
+// The above also includes <iostream> and <string> but no other
+
+void ChessBoard::copyGrid(const char (&src)[8][8], char (&dst)[8][8]) {
+    for (int row = 0; row < 8; ++row) {
+        for (int col = 0; col < 8; ++col) {
+            dst[row][col] = src[row][col];
+        }
+    }
+}
 
 // Initializes the ChessBoard
 ChessBoard::ChessBoard() {
-	// The following is temporary as there is the setup option that can overide this
-    const char onStart[8][8] = {
-        {'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'}, // 8 (row 0) - Black pieces
-        {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'}, // 7 (row 1)
-        {'_', '_', '_', '_', '_', '_', '_', '_'}, // 6 (row 2)
-        {'_', '_', '_', '_', '_', '_', '_', '_'}, // 5 (row 3)
-        {'_', '_', '_', '_', '_', '_', '_', '_'}, // 4 (row 4)
-        {'_', '_', '_', '_', '_', '_', '_', '_'}, // 3 (row 5)
-        {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'}, // 2 (row 6)
-        {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}  // 1 (row 7) - White pieces
-		// a   b    c    d    e    f    g    h
-    };
-
-    for (int row = 0; row < 8; ++row) {
-        for (int col = 0; col < 8; ++col) {
-            grid[row][col] = onStart[row][col];
-        }
-    }
+    copyGrid(originGrid, setupGrid);
+	copyGrid(setupGrid, grid);
 }
 
 // Overrides << operator to display the board
@@ -35,7 +28,13 @@ std::ostream& operator<<(std::ostream& os, const ChessBoard& board) {
     return os;
 }
 
+// Gets grid ready for a new game by copying setup grid into it
+void ChessBoard::resetBoard() {
+	copyGrid(setupGrid, grid);
+}
+
 // Clears the entire board - Obviously duh
+// We may choose to implement it on grid or setupGrid
 void ChessBoard::clearBoard() {
     for (int row = 0; row < 8; ++row) {
         for (int col = 0; col < 8; ++col) {
@@ -45,16 +44,18 @@ void ChessBoard::clearBoard() {
 }
 
 // Place a specific piece at a specific coordinate
+// This one works on setupGrid
 void ChessBoard::setSlot(const std::string& coord, char piece) {
     Coordinate curr = convertCoordinate(coord);
-    grid[curr.row][curr.col] = piece;
+    setupGrid[curr.row][curr.col] = piece;
 }
 
 // Reset a coordinate to have nothing
+// This one works on setupGrid
 void ChessBoard::resetSlot(const std::string& coord) {
 	Coordinate curr = convertCoordinate(coord);
 	
-	grid[curr.row][curr.col] = '_';
+	setupGrid[curr.row][curr.col] = '_';
 }
 
 // Converts a string coordinate, such as a1, b2, c3, ... to two numerical coordinates [x][y]
@@ -74,16 +75,14 @@ char ChessBoard::getSlot(const std::string& input) const {
 
 // Move a piece from coordinates A to B
 void ChessBoard::moveToSlot(const std::string& init, const std::string& dest) {
-	Coordinate destination = convertCoordinate(dest);
-	
-	char piece = getSlot(init);
-	resetSlot(init);
-	grid[destination.row][destination.col] = piece;
-}
+	if (init == dest) {
+        return;
+    }
 
-int main() {
-	ChessBoard genericBoard;
-	std::cout << genericBoard;
-	
-	return 0;
+    Coordinate origin = convertCoordinate(init);
+    Coordinate destination = convertCoordinate(dest);
+
+    char piece = grid[origin.row][origin.col];
+    grid[origin.row][origin.col] = '_';
+    grid[destination.row][destination.col] = piece;
 }
