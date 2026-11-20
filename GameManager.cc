@@ -5,6 +5,7 @@
 
 class GameManager {
 	ChessBoard board;
+	// Should those variables be static
 	bool gameOn; // Is game on or over
 	bool whiteTurn; // Is it white or black's turn
 	
@@ -27,6 +28,7 @@ void GameManager::runGame() {
 			}
 		} else if (gameInput.starts_with("game ")) {
 			// This is ugly Java style string management, if anyone has something better, please change it
+			// Saw that std::istringstream from <sstream> would make the code cleaner
 			size_t firstArgStart = 5; // After "game "
 			if (firstArgStart < gameInput.size()) {
 				// The following tries to extract playerOne
@@ -48,24 +50,30 @@ void GameManager::runGame() {
 					// White space trimming required
 					if (playerOne.starts_with("computer")) {
 						// Implementation of the AI class?
-					} else {
+					} else if (playerOne.starts_with("human")) {
 						// Human player
+					} else {
+						std::cout << "Invalid command\n";
 					}
 					
 					if (playerTwo.starts_with("computer")) {
 						// Implementation of AI class
-					} else {
+					} else if (playerTwo.starts_with("human")) {
 						// Human player
+					} else {
+						std::cout << "Invalid command\n";
 					}
 				} else {
-					std::cout << "Invalid command \n";
+					std::cout << "Invalid command\n";
 				}
 			} else {
-				std::cout << "Invalid command \n";
-			} else if (gameInput == "resign") {
-				gameOn = false;
-				// Some reset game function needs to be called
+				std::cout << "Invalid command\n";
 			}
+		} else if (gameInput == "resign") {
+			gameOn = false;
+			// Some reset game function needs to be called
+		} else {
+			std::cout << "Invalid command\n";
 		}
 	}
 }
