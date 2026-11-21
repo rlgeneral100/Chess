@@ -2,6 +2,7 @@
 #include "GameManager.h"
 #include "ChessBoard.h"
 
+// Checks is the requested piece exists in Chess
 bool GameManager::validPiece(const std::string& piece) const {
 	// Length must be 1, a single character
 	if (piece.length() != 1) {
@@ -22,6 +23,8 @@ bool GameManager::validPiece(const std::string& piece) const {
     }
 }
 
+// Checks if provided position is in correct format
+// E.g. a1, a2, ..., b1, b2, ..., h7, h8
 bool GameManager::validPos(const std::string& pos) const {
 	// Length must be 2, x and y
 	if (pos.length() != 2) {
@@ -51,6 +54,7 @@ bool GameManager::validPos(const std::string& pos) const {
 	return false;
 }
 
+// Checks if the command "game white black" is in valid format
 bool GameManager::validGame(std::istringstream& input) {
 	std::string player1, player2;
 	
@@ -58,6 +62,7 @@ bool GameManager::validGame(std::istringstream& input) {
 		return false;
 	}
 	
+	// Players can either be human or computer[1-4]
 	if ((player1 == "human" || player1.starts_with("computer")) &&
 		(player2 == "human" || player2.starts_with("computer"))) {
 		return true;	
@@ -70,7 +75,7 @@ bool GameManager::validGame(std::istringstream& input) {
 until game is turned off or that it only lasts one round. Not
 sure which one, I think the former but it would be slightly more work*/
 void GameManager::setupManager(const std::string& s, std::istringstream& input) {
-	if (s == "+") {
+	if (s == "+") { // Adds a piece to a square on the grid
 		std::string piece, pos;
 		// The following checks if input are valid
 		if (!(input >> piece >> pos)) {
@@ -84,7 +89,7 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		
 		// Sets the piece on the board
 		board.setSlot(pos, piece[0]);
-	} else if (s == "-") {
+	} else if (s == "-") { // Clears a square on the grid
 		std::string pos;
 		// The following checks if input are valid
 		if (!(input >> pos)) {
@@ -98,7 +103,7 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		
 		// Clears slot at pos
 		board.resetSlot(pos);
-	} else if (s == "=") {
+	} else if (s == "=") { // Assign starting colour
 		std::string colour;
 		if (!(input >> colour)) {
             invalidInput();
@@ -112,31 +117,41 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		} else {
 			invalidInput();
 		}
-	} else if (s == "done") {
+	} else if (s == "done") { // Exists setup mode
 		setupOn = false;
 	} else {
 		invalidInput();
 	}
 }
 
+// Main function in charge of an ongoing game
 void GameManager::gameOnManager(const std::string&s, std::istringstream& input) {
 	// To be implemented, complex
 }
 
+// For resigning a game
+// Currently missing score and who lost implementation
 void GameManager::resignManager() {
 	gameOn = false;
 	board.resetBoard();
 }
 
+// This function is responsible for printing when there are invalid inputs
+// It is a function so we can uniformly change all prints in one place
 void GameManager::invalidInput() const {
 	std::cout << "Invalid input\n";
 }
 
+// Constructor
 GameManager::GameManager() : gameOn(false), setupOn(false), whiteTurn(true) {}
 
+// Loops as long as game is running
 void GameManager::runGame() {
 	std::string gameInput;
 	while (std::getline(std::cin, gameInput)) {
+		// istringstream was used so we can easily use >> operator
+		// to extract all sections of a command
+		// It lets us treat the string as if it was still read from stream
 		std::istringstream input(gameInput); // Converts gameInput into it's own input stream
 		std::string s; // This will hold one word at a time
 		

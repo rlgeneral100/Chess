@@ -1,6 +1,7 @@
 #include "ChessBoard.h"
 // The above also includes <iostream> and <string> but no other
 
+// Copies one grid into another - passes by reference
 void ChessBoard::copyGrid(const char (&src)[8][8], char (&dst)[8][8]) {
     for (int row = 0; row < 8; ++row) {
         for (int col = 0; col < 8; ++col) {
@@ -10,6 +11,7 @@ void ChessBoard::copyGrid(const char (&src)[8][8], char (&dst)[8][8]) {
 }
 
 // Initializes the ChessBoard
+// Constructor
 ChessBoard::ChessBoard() {
     copyGrid(originGrid, setupGrid);
 	copyGrid(setupGrid, grid);
