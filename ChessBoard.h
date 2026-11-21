@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-struct Coordinate {
+struct Coordinate { // Stores coordinate
 	int row;
 	int col;
 };
