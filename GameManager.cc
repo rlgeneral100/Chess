@@ -71,6 +71,67 @@ bool GameManager::validGame(std::istringstream& input) {
 	return false;
 }
 
+bool GameManager::pathClear(const std::string& moveFrom, const std::string& moveTo, const char piece) {
+	switch (piece) {
+		case 'K': case 'k':
+		
+        case 'Q': case 'q':
+        case 'B': case 'b':
+        case 'N': case 'n':
+        case 'R': case 'r':
+        case 'P': case 'p':
+		
+		default:
+			return false;
+	}
+}
+
+bool GameManager::inCheck(const std::string& moveFrom, const std::string& moveTo) {
+	
+}
+
+bool GameManager::validMovePiece(const std::string& moveFrom, const std::string& moveTo, const char piece) {
+	
+}
+
+// This function will require:
+// 1. Moves from and to a valid grid position (within 8x8)
+// 2. Moves your piece (white or black depending on turn)
+// 3. Moves to empty square or to enemy piece, not yourself
+// 4. Does not jump over a piece mid path (Unless knight or castling)
+// 5. Does not cause a check
+// 6. Pawn required to take diagonally
+// 7. Move is respective the piece
+bool GameManager::validMove(const std::string& moveFrom, const std::string& moveTo) {
+	if (!validPos(moveFrom) || !validPos(moveTo)) {
+		return false;
+	}
+	
+	const char pieceAt = board.getSlot(moveFrom);
+	const char pieceTo = board.getSlot(moveTo);
+	
+	// Will require some sort of error printing
+	if (whiteTurn) {
+		if (pieceAt < 'A'|| pieceAt > 'Z') {
+			return false;
+		} else if (pieceTo != '_' && (pieceTo < 'a' || pieceTo > 'z')) {
+			return false;
+		}
+	} else {
+		if (pieceAt < 'a' || pieceAt > 'a') {
+			return false;
+		} else if (pieceTo != '_' && (pieceTo < 'A' || pieceTo > 'Z')) {
+			return false;
+		}	
+	}
+	
+	if (!validMovePiece(moveFrom, moveTo, pieceAt) || !pathClear(moveFrom, moveTo, pieceAt) || inCheck(moveFrom, moveTo)) {
+		return false;
+	}
+	
+	return true;
+}
+
 /* The issue is that we could either permanently save the setup
 until game is turned off or that it only lasts one round. Not
 sure which one, I think the former but it would be slightly more work*/
@@ -125,8 +186,23 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 }
 
 // Main function in charge of an ongoing game
-void GameManager::gameOnManager(const std::string&s, std::istringstream& input) {
+void GameManager::gameOnManager(const std::string& s, std::istringstream& input) {
 	// To be implemented, complex
+	if (s == "resign") {
+		resignManager();
+		return;
+	} else if (s == "move") {
+		std::string moveFrom, moveTo;
+		
+		if (!(input >> moveFrom >> moveTo)) {
+			invalidInput();
+			return;
+		}
+		
+		board.moveToSlot(moveFrom, moveTo); // Valid move checks and pawn taking checks to be implemented
+	} else {
+		invalidInput();
+	}
 }
 
 // For resigning a game

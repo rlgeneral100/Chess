@@ -88,3 +88,28 @@ void ChessBoard::moveToSlot(const std::string& init, const std::string& dest) {
     grid[origin.row][origin.col] = '_';
     grid[destination.row][destination.col] = piece;
 }
+
+bool KMove() {
+	
+}
+
+bool QMove() {
+	
+}
+
+bool BMove() {
+	
+}
+
+bool NMove() {
+	
+}
+
+bool RMove() {
+	
+}
+
+bool PMove() {
+	
+}
+
