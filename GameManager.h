@@ -16,9 +16,6 @@ class GameManager {
 	/*static?*/ bool validPiece(const std::string& piece) const; // This could be static
 	/*static?*/ bool validPos(const std::string& pos) const;
 	bool validGame(std::istringstream& input);
-	bool pathClear(const std::string& moveFrom, const std::string& moveTo, const char piece);
-	bool inCheck(const std::string& moveFrom, const std::string& moveTo);
-	bool validMovePiece(const std::string& moveFrom, const std::string& moveTo, const char piece);
 	bool validMove(const std::string& moveFrom, const std::string& moveTo);
 	void setupManager(const std::string& s, std::istringstream& input); // Controls altered setup commands
 	void gameOnManager(const std::string&s, std::istringstream& input); // Sets up ChessBoard for a new game

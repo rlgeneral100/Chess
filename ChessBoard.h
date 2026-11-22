@@ -10,6 +10,7 @@ struct Coordinate { // Stores coordinate
 };
 
 class ChessBoard {
+	// Board state grids
 	char grid[8][8];
 	char setupGrid[8][8]; // This may be used to save user custom setup grid
 	// The base immutable chess placement
@@ -24,21 +25,40 @@ class ChessBoard {
         {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}  // 1 (row 7) - White pieces
 		// a   b    c    d    e    f    g    h
     };
-	
+
+	// Internal coordinate & grid helpers
 	// This will convert coordinates from a4, c3, etc to numerical [x][y]
 	Coordinate convertCoordinate(const std::string& input) const;
 	void copyGrid(const char (&src)[8][8], char (&dst)[8][8]);
-	
+	static int my_abs(int x);
+
+	// Piece geometry & validation helpers
+	bool KMove(int drow, int dcol) const;
+	bool QMove(int drow, int dcol) const;
+	bool BMove(int drow, int dcol) const;
+	bool NMove(int drow, int dcol) const;
+	bool RMove(int drow, int dcol) const;
+	bool PMove(int drow, int dcol, bool isWhite, int fromRow, bool take) const;
+	bool validMovePiece(int drow, int dcol, char piece, int fromRow, bool take) const;
+	bool clearPath(Coordinate init, Coordinate dest, int drow, int dcol, char piece) const;
+	bool inCheck(Coordinate init, Coordinate dest, char piece) const;
+
 public:
+	// Construction & display
 	ChessBoard();
 	// void print(); // Or the << operator overide?
 	friend std::ostream& operator<<(std::ostream& os, const ChessBoard& board); // Either this or the above
+
+	// Board state & square operations
 	void clearBoard();
 	void resetBoard();
 	void setSlot(const std::string& coord, char piece);
 	void resetSlot(const std::string& coord);
 	char getSlot(const std::string& input) const; // input can be a4, c3, etc...
 	void moveToSlot(const std::string& init, const std::string& dest); // Move a piece from initial coordinates to destination coordinates
+
+	// Move pipeline entry point
+	bool boardSideChecks(const std::string& moveFrom, const std::string& moveTo, char piece) const;
 };
 
 #endif

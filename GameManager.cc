@@ -71,29 +71,6 @@ bool GameManager::validGame(std::istringstream& input) {
 	return false;
 }
 
-bool GameManager::pathClear(const std::string& moveFrom, const std::string& moveTo, const char piece) {
-	switch (piece) {
-		case 'K': case 'k':
-		
-        case 'Q': case 'q':
-        case 'B': case 'b':
-        case 'N': case 'n':
-        case 'R': case 'r':
-        case 'P': case 'p':
-		
-		default:
-			return false;
-	}
-}
-
-bool GameManager::inCheck(const std::string& moveFrom, const std::string& moveTo) {
-	
-}
-
-bool GameManager::validMovePiece(const std::string& moveFrom, const std::string& moveTo, const char piece) {
-	
-}
-
 // This function will require:
 // 1. Moves from and to a valid grid position (within 8x8)
 // 2. Moves your piece (white or black depending on turn)
@@ -103,33 +80,34 @@ bool GameManager::validMovePiece(const std::string& moveFrom, const std::string&
 // 6. Pawn required to take diagonally
 // 7. Move is respective the piece
 bool GameManager::validMove(const std::string& moveFrom, const std::string& moveTo) {
-	if (!validPos(moveFrom) || !validPos(moveTo)) {
+	// 1. Moves from and to a valid grid position (within 8x8)
+	if (!validPos(moveFrom) || !validPos(moveTo) || moveFrom == moveTo) {
 		return false;
 	}
-	
+
 	const char pieceAt = board.getSlot(moveFrom);
 	const char pieceTo = board.getSlot(moveTo);
-	
-	// Will require some sort of error printing
+
+	// 2 & 3. Moves your piece, and moves to empty square or enemy piece (not yourself)
+	// TODO: Will require some sort of error printing
 	if (whiteTurn) {
-		if (pieceAt < 'A'|| pieceAt > 'Z') {
+		if (pieceAt < 'A' || pieceAt > 'Z') {
 			return false;
-		} else if (pieceTo != '_' && (pieceTo < 'a' || pieceTo > 'z')) {
+		} else if (pieceTo != '_' && (pieceTo < 'A' || pieceTo <= 'Z')) {
+			// pieceTo is white (friendly)
 			return false;
 		}
 	} else {
-		if (pieceAt < 'a' || pieceAt > 'a') {
+		if (pieceAt < 'a' || pieceAt > 'z') {
 			return false;
-		} else if (pieceTo != '_' && (pieceTo < 'A' || pieceTo > 'Z')) {
+		} else if (pieceTo != '_' && (pieceTo >= 'a' && pieceTo <= 'z')) {
+			// pieceTo is black (friendly)
 			return false;
-		}	
+		}
 	}
-	
-	if (!validMovePiece(moveFrom, moveTo, pieceAt) || !pathClear(moveFrom, moveTo, pieceAt) || inCheck(moveFrom, moveTo)) {
-		return false;
-	}
-	
-	return true;
+
+	// 4, 5, 6, 7. Piece rules, clear path, pawn diagonal capture, and no self-check
+	return board.boardSideChecks(moveFrom, moveTo, pieceAt);
 }
 
 /* The issue is that we could either permanently save the setup
