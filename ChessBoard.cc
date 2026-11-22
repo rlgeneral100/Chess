@@ -18,6 +18,7 @@ ChessBoard::ChessBoard() {
 }
 
 // Overrides << operator to display the board
+// Might consider to use std::endl, where we flush each time
 std::ostream& operator<<(std::ostream& os, const ChessBoard& board) {
     for (int row = 0; row < 8; ++row) {
         os << (8 - row) << " "; // Row labels
