@@ -202,94 +202,128 @@ bool ChessBoard::clearPath(Coordinate init, Coordinate dest, int drow, int dcol,
 }
 
 // inCheck using predicted grid (returns true if moving piece leaves your own king in check)
+// Returns true if applying (init -> dest) leaves the moving side's own king in check
 bool ChessBoard::inCheck(Coordinate init, Coordinate dest, char piece) const {
 	bool isWhite = (piece >= 'A' && piece <= 'Z');
 
+	// Copy current board into a temporary grid so we can simulate the move safely
 	char testGrid[8][8];
-	for (int r = 0; r < 8; ++r) {
-		for (int c = 0; c < 8; ++c) {
-			testGrid[r][c] = grid[r][c];
+	for (int row = 0; row < 8; ++row) {
+		for (int col = 0; col < 8; ++col) {
+			testGrid[row][col] = grid[row][col];
 		}
 	}
 
-	// Apply move on predicted grid
+	// Simulate the candidate move on the predicted board
 	testGrid[dest.row][dest.col] = piece;
 	testGrid[init.row][init.col] = '_';
 
-	// Locate own king
-	char ownKing = isWhite ? 'K' : 'k';
-	int kr = -1, kc = -1;
-	for (int r = 0; r < 8; ++r) {
-		for (int c = 0; c < 8; ++c) {
-			if (testGrid[r][c] == ownKing) {
-				kr = r;
-				kc = c;
+	// Find where our own king sits after the simulated move
+	char ownKingSymbol = isWhite ? 'K' : 'k';
+	int kingRow = -1;
+	int kingCol = -1;
+	for (int row = 0; row < 8; ++row) {
+		for (int col = 0; col < 8; ++col) {
+			if (testGrid[row][col] == ownKingSymbol) {
+				kingRow = row;
+				kingCol = col;
 				break;
 			}
 		}
 	}
-	if (kr == -1) return false;
 
-	auto isEnemy = [&](char ch, char wSym, char bSym) {
-		return ch == (isWhite ? bSym : wSym);
-	};
-	auto inBounds = [](int r, int c) {
-		return r >= 0 && r < 8 && c >= 0 && c < 8;
-	};
+	// If no king is on the board (for example, in a custom test setup), report not in check
+	if (kingRow == -1) {
+		return false;
+	}
 
-	// Knight attacks
-	static const int kDr[8] = {2, 2, 1, 1, -1, -1, -2, -2};
-	static const int kDc[8] = {1, -1, 2, -2, 2, -2, 1, -1};
+	char enemyKnight = isWhite ? 'n' : 'N';
+	char enemyPawn = isWhite ? 'p' : 'P';
+	char enemyRook = isWhite ? 'r' : 'R';
+	char enemyBishop = isWhite ? 'b' : 'B';
+	char enemyQueen = isWhite ? 'q' : 'Q';
+	char enemyKing = isWhite ? 'k' : 'K';
+
+	// 1. Check L-shaped knight attacks around the king
+	static const int knightRowOffsets[8] = {2, 2, 1, 1, -1, -1, -2, -2};
+	static const int knightColOffsets[8] = {1, -1, 2, -2, 2, -2, 1, -1};
 	for (int i = 0; i < 8; ++i) {
-		int r = kr + kDr[i], c = kc + kDc[i];
-		if (inBounds(r, c) && isEnemy(testGrid[r][c], 'N', 'n')) return true;
-	}
-
-	// Pawn attacks
-	int pawnStepR = isWhite ? 1 : -1;
-	for (int dcStep : {-1, 1}) {
-		int r = kr + pawnStepR, c = kc + dcStep;
-		if (inBounds(r, c) && isEnemy(testGrid[r][c], 'P', 'p')) return true;
-	}
-
-	// Straight rays (Rook / Queen)
-	static const int oDr[4] = {1, -1, 0, 0};
-	static const int oDc[4] = {0, 0, 1, -1};
-	for (int d = 0; d < 4; ++d) {
-		int r = kr + oDr[d], c = kc + oDc[d];
-		while (inBounds(r, c)) {
-			char ch = testGrid[r][c];
-			if (ch != '_') {
-				if (isEnemy(ch, 'R', 'r') || isEnemy(ch, 'Q', 'q')) return true;
-				break;
+		int checkRow = kingRow + knightRowOffsets[i];
+		int checkCol = kingCol + knightColOffsets[i];
+		if (checkRow >= 0 && checkRow < 8 && checkCol >= 0 && checkCol < 8) {
+			if (testGrid[checkRow][checkCol] == enemyKnight) {
+				return true;
 			}
-			r += oDr[d];
-			c += oDc[d];
 		}
 	}
 
-	// Diagonal rays (Bishop / Queen)
-	static const int dDr[4] = {1, 1, -1, -1};
-	static const int dDc[4] = {1, -1, 1, -1};
-	for (int d = 0; d < 4; ++d) {
-		int r = kr + dDr[d], c = kc + dDc[d];
-		while (inBounds(r, c)) {
-			char ch = testGrid[r][c];
-			if (ch != '_') {
-				if (isEnemy(ch, 'B', 'b') || isEnemy(ch, 'Q', 'q')) return true;
-				break;
-			}
-			r += dDr[d];
-			c += dDc[d];
+	// 2. Check diagonal pawn attacks aimed at the king's rank
+	// White moves upward (decreasing row index), so a black pawn attacks from kingRow - 1;
+	// Black moves downward (increasing row index), so a white pawn attacks from kingRow + 1.
+	int pawnAttackRowStep = isWhite ? -1 : 1;
+	int pawnRow = kingRow + pawnAttackRowStep;
+	if (pawnRow >= 0 && pawnRow < 8) {
+		int leftCol = kingCol - 1;
+		int rightCol = kingCol + 1;
+		if (leftCol >= 0 && testGrid[pawnRow][leftCol] == enemyPawn) {
+			return true;
+		}
+		if (rightCol < 8 && testGrid[pawnRow][rightCol] == enemyPawn) {
+			return true;
 		}
 	}
 
-	// Adjacent enemy king
-	for (int drStep = -1; drStep <= 1; ++drStep) {
-		for (int dcStep = -1; dcStep <= 1; ++dcStep) {
-			if (drStep == 0 && dcStep == 0) continue;
-			int r = kr + drStep, c = kc + dcStep;
-			if (inBounds(r, c) && isEnemy(testGrid[r][c], 'K', 'k')) return true;
+	// 3. Check straight rays (up, down, left, right) for an unblocked enemy rook or queen
+	static const int straightRowDirs[4] = {1, -1, 0, 0};
+	static const int straightColDirs[4] = {0, 0, 1, -1};
+	for (int dir = 0; dir < 4; ++dir) {
+		int currRow = kingRow + straightRowDirs[dir];
+		int currCol = kingCol + straightColDirs[dir];
+		while (currRow >= 0 && currRow < 8 && currCol >= 0 && currCol < 8) {
+			char occupant = testGrid[currRow][currCol];
+			if (occupant != '_') {
+				if (occupant == enemyRook || occupant == enemyQueen) {
+					return true;
+				}
+				break; // Any other piece along this line blocks straight sliding attacks
+			}
+			currRow += straightRowDirs[dir];
+			currCol += straightColDirs[dir];
+		}
+	}
+
+	// 4. Check diagonal rays for an unblocked enemy bishop or queen
+	static const int diagRowDirs[4] = {1, 1, -1, -1};
+	static const int diagColDirs[4] = {1, -1, 1, -1};
+	for (int dir = 0; dir < 4; ++dir) {
+		int currRow = kingRow + diagRowDirs[dir];
+		int currCol = kingCol + diagColDirs[dir];
+		while (currRow >= 0 && currRow < 8 && currCol >= 0 && currCol < 8) {
+			char occupant = testGrid[currRow][currCol];
+			if (occupant != '_') {
+				if (occupant == enemyBishop || occupant == enemyQueen) {
+					return true;
+				}
+				break; // Any other piece along this diagonal blocks sliding attacks
+			}
+			currRow += diagRowDirs[dir];
+			currCol += diagColDirs[dir];
+		}
+	}
+
+	// 5. Check the 8 surrounding squares for an adjacent enemy king
+	for (int rowOffset = -1; rowOffset <= 1; ++rowOffset) {
+		for (int colOffset = -1; colOffset <= 1; ++colOffset) {
+			if (rowOffset == 0 && colOffset == 0) {
+				continue;
+			}
+			int adjRow = kingRow + rowOffset;
+			int adjCol = kingCol + colOffset;
+			if (adjRow >= 0 && adjRow < 8 && adjCol >= 0 && adjCol < 8) {
+				if (testGrid[adjRow][adjCol] == enemyKing) {
+					return true;
+				}
+			}
 		}
 	}
 
@@ -300,8 +334,8 @@ bool ChessBoard::boardSideChecks(const std::string& moveFrom, const std::string&
 	Coordinate init = convertCoordinate(moveFrom);
 	Coordinate dest = convertCoordinate(moveTo);
 
-	int drow = dest.row - init.row;
-	int dcol = dest.col - init.col;
+	int drow = dest.row - init.row; // delta (change in) row
+	int dcol = dest.col - init.col; // delta (change in) col
 	bool take = (grid[dest.row][dest.col] != '_');
 
 	// Returns true only when move is valid and does NOT leave own king in check

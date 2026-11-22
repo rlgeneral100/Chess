@@ -91,14 +91,14 @@ bool GameManager::validMove(const std::string& moveFrom, const std::string& move
 	// 2 & 3. Moves your piece, and moves to empty square or enemy piece (not yourself)
 	// TODO: Will require some sort of error printing
 	if (whiteTurn) {
-		if (pieceAt < 'A' || pieceAt > 'Z') {
+		if (pieceAt < 'A' || pieceAt > 'Z') { // Tries to move black piece
 			return false;
 		} else if (pieceTo != '_' && (pieceTo < 'A' || pieceTo <= 'Z')) {
 			// pieceTo is white (friendly)
 			return false;
 		}
-	} else {
-		if (pieceAt < 'a' || pieceAt > 'z') {
+	} else { // If black turn
+		if (pieceAt < 'a' || pieceAt > 'z') { // Tries to move white piece
 			return false;
 		} else if (pieceTo != '_' && (pieceTo >= 'a' && pieceTo <= 'z')) {
 			// pieceTo is black (friendly)
@@ -173,6 +173,9 @@ void GameManager::gameOnManager(const std::string& s, std::istringstream& input)
 		std::string moveFrom, moveTo;
 		
 		if (!(input >> moveFrom >> moveTo)) {
+			invalidInput();
+			return;
+		} else if (!validMove(moveFrom, moveTo)) {
 			invalidInput();
 			return;
 		}
