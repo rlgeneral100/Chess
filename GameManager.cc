@@ -164,7 +164,7 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 	} else if (s == "clear") { // This is a custom feature, not required
 		board.clearBoard();
 		board.drawSetup();
-	} else if (s == "print") {
+	} else if (s == "print") { // This is a custom feature
 		board.drawSetup();
 	} else if (s == "done") { // Exists setup mode
 		setupOn = false;
