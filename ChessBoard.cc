@@ -48,10 +48,11 @@ void ChessBoard::resetBoard() {
 
 // Clears the entire board - Obviously duh
 // We may choose to implement it on grid or setupGrid
+// CURRENTLY for setupGrid, please consult rlgeneral100 before modifying
 void ChessBoard::clearBoard() {
     for (int row = 0; row < 8; ++row) {
         for (int col = 0; col < 8; ++col) {
-            grid[row][col] = '_';
+            setupGrid[row][col] = '_';
         }
     }
 }
@@ -114,32 +115,32 @@ int ChessBoard::my_abs(int x) {
 // dcol is delta column, the change in col movement (may be passed as abs)
 
 // Change is at most 1 for row and col and not both 0
-bool ChessBoard::KMove(int drow, int dcol) {
+bool ChessBoard::KMove(int drow, int dcol) const {
 	return drow <= 1 && dcol <= 1 && !(drow == 0 && dcol == 0);
 }
 
 // Change must be the same along row and col and non-zero
-bool ChessBoard::BMove(int drow, int dcol) {
+bool ChessBoard::BMove(int drow, int dcol) const {
 	return drow == dcol && drow > 0;
 }
 
 // Change is L
-bool ChessBoard::NMove(int drow, int dcol) {
+bool ChessBoard::NMove(int drow, int dcol) const {
 	return (drow == 2 && dcol == 1) || (drow == 1 && dcol == 2);
 }
 
 // Change is along row XOR col; non-zero
-bool ChessBoard::RMove(int drow, int dcol) {
+bool ChessBoard::RMove(int drow, int dcol) const {
 	return (drow == 0 && dcol != 0) || (dcol == 0 && drow != 0);
 }
 
 // Either a Bishop or Rook move
-bool ChessBoard::QMove(int drow, int dcol) {
+bool ChessBoard::QMove(int drow, int dcol) const {
 	return BMove(drow, dcol) || RMove(drow, dcol);
 }
 
 // Pawn move, depends on take is involved
-bool ChessBoard::PMove(int drow, int dcol, bool isWhite, int fromRow, bool take) {
+bool ChessBoard::PMove(int drow, int dcol, bool isWhite, int fromRow, bool take) const {
 	int dir = isWhite ? -1 : 1;
 	int startRow = isWhite ? 6 : 1;
 
@@ -159,7 +160,7 @@ bool ChessBoard::PMove(int drow, int dcol, bool isWhite, int fromRow, bool take)
 }
 
 // Checks whether move is valid depending on piece
-bool ChessBoard::validMovePiece(int drow, int dcol, char piece, int fromRow, bool take) {
+bool ChessBoard::validMovePiece(int drow, int dcol, char piece, int fromRow, bool take) const {
 	bool isWhite = (piece >= 'A' && piece <= 'Z');
 
 	switch (piece) {

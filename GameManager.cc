@@ -158,8 +158,13 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		} else {
 			invalidInput();
 		}
-	} else if (s == "reset") {
+	} else if (s == "reset") { // This is a custom feature, not required
 		board.resetSetup();
+		board.drawSetup();
+	} else if (s == "clear") { // This is a custom feature, not required
+		board.clearBoard();
+		board.drawSetup();
+	} else if (s == "print") {
 		board.drawSetup();
 	} else if (s == "done") { // Exists setup mode
 		setupOn = false;
@@ -203,16 +208,32 @@ void GameManager::resignManager() {
 // This function is responsible for printing when there are invalid inputs
 // It is a function so we can uniformly change all prints in one place
 void GameManager::invalidInput() const {
-	std::cout << "Invalid input\n";
+	std::cout << ">>> Invalid input\n";
 }
 
 // Constructor
 GameManager::GameManager() : whiteScore(0), blackScore(0), gameOn(false), setupOn(false), whiteTurn(true) {}
 
+void GameManager::printPrompt() const {
+	if (setupOn) {
+		std::cout << "Setup mode. Enter command:\n";
+	} else if (gameOn) {
+		std::cout << "Game mode. Enter command:\n";
+	} else {
+		std::cout << "Lobby. Enter command:\n";
+	}
+}
+
 // Loops as long as game is running
 void GameManager::runGame() {
 	std::string gameInput;
-	while (std::getline(std::cin, gameInput)) {
+	printPrompt(); // COMMENT OUT this line if you hate the CLI
+
+	while (true) {
+		if (!std::getline(std::cin, gameInput)) {
+			break;
+		}
+		
 		// istringstream was used so we can easily use >> operator
 		// to extract all sections of a command
 		// It lets us treat the string as if it was still read from stream
@@ -220,14 +241,17 @@ void GameManager::runGame() {
 		std::string s; // This will hold one word at a time
 		
 		if (!(input >> s)) {
+			printPrompt(); // COMMENT OUT this line if you hate the CLI
 			continue; // If somehow read fails
 		}
 		
 		if (setupOn) {
 			setupManager(s, input);
+			printPrompt(); // COMMENT OUT this line if you hate the CLI
 			continue; // We skip the rest if on setup mode
 		} else if (gameOn) {
 			gameOnManager(s, input);
+			printPrompt(); // COMMENT OUT this line if you hate the CLI
 			continue;
 		}
 
@@ -244,7 +268,11 @@ void GameManager::runGame() {
 		} else {
 			invalidInput(); // This is a function so that it is easier to change the invalid message
 		}
+
+		printPrompt(); // COMMENT OUT this line if you hate the CLI
 	}
+	
+	std::cout << "Final Score: Big Brother WON!"; // This prints when program ends
 }
 
 int main() {

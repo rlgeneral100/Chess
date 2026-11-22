@@ -1,6 +1,11 @@
 #ifndef GAMEMANAGER_H
 #define GAMEMANAGER_H
 
+// Compile lines
+
+// C:\msys64\ucrt64\bin\g++.exe -std=c++20 -Wall -Wextra ChessBoard.cc GameManager.cc -o chess.exe
+// .\chess.exe
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -18,6 +23,7 @@ class GameManager {
 	/*static?*/ bool validPos(const std::string& pos) const;
 	bool validGame(std::istringstream& input);
 	bool validMove(const std::string& moveFrom, const std::string& moveTo);
+	void printPrompt() const;
 	void setupManager(const std::string& s, std::istringstream& input); // Controls altered setup commands
 	void gameOnManager(const std::string&s, std::istringstream& input); // Sets up ChessBoard for a new game
 	void resignManager(); // Performs necessary resets following a resign
