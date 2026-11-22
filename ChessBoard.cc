@@ -30,6 +30,17 @@ std::ostream& operator<<(std::ostream& os, const ChessBoard& board) {
     return os;
 }
 
+void ChessBoard::drawSetup() const {
+    for (int row = 0; row < 8; ++row) {
+        std::cout << (8 - row) << " "; // Row labels
+        for (int col = 0; col < 8; ++col) {
+            std::cout << setupGrid[row][col] << ' ';
+        }
+        std::cout << '\n';
+    }
+    std::cout << "  a b c d e f g h\n";
+}
+
 // Gets grid ready for a new game by copying setup grid into it
 void ChessBoard::resetBoard() {
 	copyGrid(setupGrid, grid);
@@ -43,6 +54,10 @@ void ChessBoard::clearBoard() {
             grid[row][col] = '_';
         }
     }
+}
+
+void ChessBoard::resetSetup() {
+	copyGrid(originGrid, setupGrid);
 }
 
 // Place a specific piece at a specific coordinate
@@ -125,8 +140,8 @@ bool ChessBoard::QMove(int drow, int dcol) {
 
 // Pawn move, depends on take is involved
 bool ChessBoard::PMove(int drow, int dcol, bool isWhite, int fromRow, bool take) {
-	int dir = isWhite ? 1 : -1;
-	int startRow = isWhite ? 1 : 6;
+	int dir = isWhite ? -1 : 1;
+	int startRow = isWhite ? 6 : 1;
 
 	// 1 forward on empty square
 	if (!take && dcol == 0 && drow == dir) {
@@ -330,7 +345,7 @@ bool ChessBoard::inCheck(Coordinate init, Coordinate dest, char piece) const {
 	return false;
 }
 
-bool ChessBoard::boardSideChecks(const std::string& moveFrom, const std::string& moveTo, char piece) {
+bool ChessBoard::boardSideChecks(const std::string& moveFrom, const std::string& moveTo, char piece) const {
 	Coordinate init = convertCoordinate(moveFrom);
 	Coordinate dest = convertCoordinate(moveTo);
 

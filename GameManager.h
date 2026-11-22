@@ -8,6 +8,7 @@
 
 class GameManager {
 	ChessBoard board;
+	int whiteScore, blackScore;
 	// Should those variables be static
 	bool gameOn; // Is game on or over
 	bool setupOn; // Are we in setup format

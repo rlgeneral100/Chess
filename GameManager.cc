@@ -93,7 +93,7 @@ bool GameManager::validMove(const std::string& moveFrom, const std::string& move
 	if (whiteTurn) {
 		if (pieceAt < 'A' || pieceAt > 'Z') { // Tries to move black piece
 			return false;
-		} else if (pieceTo != '_' && (pieceTo < 'A' || pieceTo <= 'Z')) {
+		} else if (pieceTo != '_' && (pieceTo >= 'A' && pieceTo <= 'Z')) {
 			// pieceTo is white (friendly)
 			return false;
 		}
@@ -128,6 +128,7 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		
 		// Sets the piece on the board
 		board.setSlot(pos, piece[0]);
+		board.drawSetup();
 	} else if (s == "-") { // Clears a square on the grid
 		std::string pos;
 		// The following checks if input are valid
@@ -142,6 +143,7 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		
 		// Clears slot at pos
 		board.resetSlot(pos);
+		board.drawSetup();
 	} else if (s == "=") { // Assign starting colour
 		std::string colour;
 		if (!(input >> colour)) {
@@ -156,6 +158,9 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		} else {
 			invalidInput();
 		}
+	} else if (s == "reset") {
+		board.resetSetup();
+		board.drawSetup();
 	} else if (s == "done") { // Exists setup mode
 		setupOn = false;
 	} else {
@@ -181,6 +186,8 @@ void GameManager::gameOnManager(const std::string& s, std::istringstream& input)
 		}
 		
 		board.moveToSlot(moveFrom, moveTo); // Valid move checks and pawn taking checks to be implemented
+		std::cout << board;
+		whiteTurn = !whiteTurn;
 	} else {
 		invalidInput();
 	}
@@ -200,7 +207,7 @@ void GameManager::invalidInput() const {
 }
 
 // Constructor
-GameManager::GameManager() : gameOn(false), setupOn(false), whiteTurn(true) {}
+GameManager::GameManager() : whiteScore(0), blackScore(0), gameOn(false), setupOn(false), whiteTurn(true) {}
 
 // Loops as long as game is running
 void GameManager::runGame() {
@@ -230,6 +237,7 @@ void GameManager::runGame() {
 			if (validGame(input)) {
 				gameOn = true;
 				board.resetBoard();
+				std::cout << board;
 			} else {
 				invalidInput();
 			}

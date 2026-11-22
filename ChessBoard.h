@@ -50,8 +50,10 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const ChessBoard& board); // Either this or the above
 
 	// Board state & square operations
+	void drawSetup() const;
 	void clearBoard();
 	void resetBoard();
+	void resetSetup();
 	void setSlot(const std::string& coord, char piece);
 	void resetSlot(const std::string& coord);
 	char getSlot(const std::string& input) const; // input can be a4, c3, etc...
