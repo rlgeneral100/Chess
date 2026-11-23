@@ -1,6 +1,14 @@
 #ifndef GAMEMANAGER_H
 #define GAMEMANAGER_H
 
+// Compile lines for Windows
+// g++ -std=c++20 -Wall -Wextra ChessBoard.cc GameManager.cc -o chess.exe
+// .\chess.exe
+
+// Compile lines for Linux/Unix
+// g++ -std=c++20 -Wall -Wextra ChessBoard.cc GameManager.cc -o chess
+// .\chess
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -8,6 +16,7 @@
 
 class GameManager {
 	ChessBoard board;
+	int whiteScore, blackScore;
 	// Should those variables be static
 	bool gameOn; // Is game on or over
 	bool setupOn; // Are we in setup format
@@ -16,6 +25,8 @@ class GameManager {
 	/*static?*/ bool validPiece(const std::string& piece) const; // This could be static
 	/*static?*/ bool validPos(const std::string& pos) const;
 	bool validGame(std::istringstream& input);
+	bool validMove(const std::string& moveFrom, const std::string& moveTo);
+	void printPrompt() const;
 	void setupManager(const std::string& s, std::istringstream& input); // Controls altered setup commands
 	void gameOnManager(const std::string&s, std::istringstream& input); // Sets up ChessBoard for a new game
 	void resignManager(); // Performs necessary resets following a resign

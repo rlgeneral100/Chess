@@ -71,6 +71,45 @@ bool GameManager::validGame(std::istringstream& input) {
 	return false;
 }
 
+// This function will require:
+// 1. Moves from and to a valid grid position (within 8x8)
+// 2. Moves your piece (white or black depending on turn)
+// 3. Moves to empty square or to enemy piece, not yourself
+// 4. Does not jump over a piece mid path (Unless knight or castling)
+// 5. Does not cause a check
+// 6. Pawn required to take diagonally
+// 7. Move is respective the piece
+bool GameManager::validMove(const std::string& moveFrom, const std::string& moveTo) {
+	// 1. Moves from and to a valid grid position (within 8x8)
+	if (!validPos(moveFrom) || !validPos(moveTo) || moveFrom == moveTo) {
+		return false;
+	}
+
+	const char pieceAt = board.getSlot(moveFrom);
+	const char pieceTo = board.getSlot(moveTo);
+
+	// 2 & 3. Moves your piece, and moves to empty square or enemy piece (not yourself)
+	// TODO: Will require some sort of error printing
+	if (whiteTurn) {
+		if (pieceAt < 'A' || pieceAt > 'Z') { // Tries to move black piece
+			return false;
+		} else if (pieceTo != '_' && (pieceTo >= 'A' && pieceTo <= 'Z')) {
+			// pieceTo is white (friendly)
+			return false;
+		}
+	} else { // If black turn
+		if (pieceAt < 'a' || pieceAt > 'z') { // Tries to move white piece
+			return false;
+		} else if (pieceTo != '_' && (pieceTo >= 'a' && pieceTo <= 'z')) {
+			// pieceTo is black (friendly)
+			return false;
+		}
+	}
+
+	// 4, 5, 6, 7. Piece rules, clear path, pawn diagonal capture, and no self-check
+	return board.boardSideChecks(moveFrom, moveTo, pieceAt);
+}
+
 /* The issue is that we could either permanently save the setup
 until game is turned off or that it only lasts one round. Not
 sure which one, I think the former but it would be slightly more work*/
@@ -89,6 +128,7 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		
 		// Sets the piece on the board
 		board.setSlot(pos, piece[0]);
+		board.drawSetup();
 	} else if (s == "-") { // Clears a square on the grid
 		std::string pos;
 		// The following checks if input are valid
@@ -103,6 +143,7 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		
 		// Clears slot at pos
 		board.resetSlot(pos);
+		board.drawSetup();
 	} else if (s == "=") { // Assign starting colour
 		std::string colour;
 		if (!(input >> colour)) {
@@ -117,6 +158,14 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 		} else {
 			invalidInput();
 		}
+	} else if (s == "reset") { // This is a custom feature, not required
+		board.resetSetup();
+		board.drawSetup();
+	} else if (s == "clear") { // This is a custom feature, not required
+		board.clearBoard();
+		board.drawSetup();
+	} else if (s == "print") { // This is a custom feature
+		board.drawSetup();
 	} else if (s == "done") { // Exists setup mode
 		setupOn = false;
 	} else {
@@ -125,8 +174,28 @@ void GameManager::setupManager(const std::string& s, std::istringstream& input) 
 }
 
 // Main function in charge of an ongoing game
-void GameManager::gameOnManager(const std::string&s, std::istringstream& input) {
+void GameManager::gameOnManager(const std::string& s, std::istringstream& input) {
 	// To be implemented, complex
+	if (s == "resign") {
+		resignManager();
+		return;
+	} else if (s == "move") {
+		std::string moveFrom, moveTo;
+		
+		if (!(input >> moveFrom >> moveTo)) {
+			invalidInput();
+			return;
+		} else if (!validMove(moveFrom, moveTo)) {
+			invalidInput();
+			return;
+		}
+		
+		board.moveToSlot(moveFrom, moveTo); // Valid move checks and pawn taking checks to be implemented
+		std::cout << board;
+		whiteTurn = !whiteTurn;
+	} else {
+		invalidInput();
+	}
 }
 
 // For resigning a game
@@ -139,16 +208,32 @@ void GameManager::resignManager() {
 // This function is responsible for printing when there are invalid inputs
 // It is a function so we can uniformly change all prints in one place
 void GameManager::invalidInput() const {
-	std::cout << "Invalid input\n";
+	std::cout << ">>> Invalid input\n";
 }
 
 // Constructor
-GameManager::GameManager() : gameOn(false), setupOn(false), whiteTurn(true) {}
+GameManager::GameManager() : whiteScore(0), blackScore(0), gameOn(false), setupOn(false), whiteTurn(true) {}
+
+void GameManager::printPrompt() const {
+	if (setupOn) {
+		std::cout << "Setup mode. Enter command:\n";
+	} else if (gameOn) {
+		std::cout << "Game mode. Enter command:\n";
+	} else {
+		std::cout << "Lobby. Enter command:\n";
+	}
+}
 
 // Loops as long as game is running
 void GameManager::runGame() {
 	std::string gameInput;
-	while (std::getline(std::cin, gameInput)) {
+	printPrompt(); // COMMENT OUT this line if you hate the CLI
+
+	while (true) {
+		if (!std::getline(std::cin, gameInput)) {
+			break;
+		}
+		
 		// istringstream was used so we can easily use >> operator
 		// to extract all sections of a command
 		// It lets us treat the string as if it was still read from stream
@@ -156,14 +241,17 @@ void GameManager::runGame() {
 		std::string s; // This will hold one word at a time
 		
 		if (!(input >> s)) {
+			printPrompt(); // COMMENT OUT this line if you hate the CLI
 			continue; // If somehow read fails
 		}
 		
 		if (setupOn) {
 			setupManager(s, input);
+			printPrompt(); // COMMENT OUT this line if you hate the CLI
 			continue; // We skip the rest if on setup mode
 		} else if (gameOn) {
 			gameOnManager(s, input);
+			printPrompt(); // COMMENT OUT this line if you hate the CLI
 			continue;
 		}
 
@@ -173,13 +261,18 @@ void GameManager::runGame() {
 			if (validGame(input)) {
 				gameOn = true;
 				board.resetBoard();
+				std::cout << board;
 			} else {
 				invalidInput();
 			}
 		} else {
 			invalidInput(); // This is a function so that it is easier to change the invalid message
 		}
+
+		printPrompt(); // COMMENT OUT this line if you hate the CLI
 	}
+	
+	std::cout << "Final Score: Big Brother WON!"; // This prints when program ends
 }
 
 int main() {
