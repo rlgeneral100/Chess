@@ -24,8 +24,9 @@ class GameManager {
 	// Some of the following may be public candidates
 	/*static?*/ bool validPiece(const std::string& piece) const; // This could be static
 	/*static?*/ bool validPos(const std::string& pos) const;
-	bool validGame(std::istringstream& input);
+	bool validGame(const std::string& player1, const std::string& player2) const;
 	bool validMove(const std::string& moveFrom, const std::string& moveTo);
+	int computerLevel(const std::string& colour);
 	void printPrompt() const;
 	void setupManager(const std::string& s, std::istringstream& input); // Controls altered setup commands
 	void gameOnManager(const std::string&s, std::istringstream& input); // Sets up ChessBoard for a new game
