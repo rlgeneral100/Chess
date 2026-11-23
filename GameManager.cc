@@ -55,9 +55,20 @@ bool GameManager::validPos(const std::string& pos) const {
 }
 
 // Checks if the command "game white black" is in valid format
-bool GameManager::validGame(const std::string& player1, const std::string& player2) const {	
-	// Players can either be human or computer (level is now an extra step, see GameManager::computerLevel)
-	return ((player1 == "human" || player1 == "computer") && (player2 == "human" || player2 == "computer"));
+bool GameManager::validGame(std::istringstream& input) {
+	std::string player1, player2;
+	
+	if (!(input >> player1 >> player2)) {
+		return false;
+	}
+	
+	// Players can either be human or computer[1-4]
+	if ((player1 == "human" || player1.starts_with("computer")) &&
+		(player2 == "human" || player2.starts_with("computer"))) {
+		return true;	
+	}
+	
+	return false;
 }
 
 // This function will require:
@@ -76,11 +87,6 @@ bool GameManager::validMove(const std::string& moveFrom, const std::string& move
 
 	const char pieceAt = board.getSlot(moveFrom);
 	const char pieceTo = board.getSlot(moveTo);
-
-	// Stops a piece from capturing the king
-	if (pieceTo == 'K' || pieceTo == 'k') {
-		return false;
-	}
 
 	// 2 & 3. Moves your piece, and moves to empty square or enemy piece (not yourself)
 	// TODO: Will require some sort of error printing
@@ -102,25 +108,6 @@ bool GameManager::validMove(const std::string& moveFrom, const std::string& move
 
 	// 4, 5, 6, 7. Piece rules, clear path, pawn diagonal capture, and no self-check
 	return board.boardSideChecks(moveFrom, moveTo, pieceAt);
-}
-
-// THis function asks for the computer level
-int GameManager::computerLevel(const std::string& colour) {
-	int level;
-	std::string line;
-	while (true) {
-		std::cout << "Enter difficulty for " << colour << " (1-4): ";
-		if (!std::getline(std::cin, line)) {
-			return -1;
-		}
-
-		std::istringstream input(line);
-		if ((input >> level) && level >= 1 && level <= 4) {
-			return level;
-		}
-
-		std::cout << "Invalid level (must be in between 1-4)\n";
-	}
 }
 
 /* The issue is that we could either permanently save the setup
@@ -271,23 +258,13 @@ void GameManager::runGame() {
 		if (s == "setup") {
 			setupOn = true;
 		} else if (s == "game") {
-			std::string player1, player2;
-			if (!(input >> player1 >> player2) || !validGame(player1, player2)) {
-				invalidInput();
-			} else {
-				int whiteLevel = 0;
-				int blackLevel = 0;	// 0 means a player is human
-				if (player1 == "computer") {
-					whiteLevel = computerLevel("White");
-				}
-				if (player2 == "computer") {
-					blackLevel = computerLevel("Black");
-				}
+			if (validGame(input)) {
 				gameOn = true;
 				board.resetBoard();
 				std::cout << board;
-				whiteTurn = true; // Sets first turn to be white when resetting (might have to change this later when setting up positions where it is black to move)
-			} 
+			} else {
+				invalidInput();
+			}
 		} else {
 			invalidInput(); // This is a function so that it is easier to change the invalid message
 		}
