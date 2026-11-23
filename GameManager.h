@@ -1,10 +1,13 @@
 #ifndef GAMEMANAGER_H
 #define GAMEMANAGER_H
 
-// Compile lines
-
-// C:\msys64\ucrt64\bin\g++.exe -std=c++20 -Wall -Wextra ChessBoard.cc GameManager.cc -o chess.exe
+// Compile lines for Windows
+// g++ -std=c++20 -Wall -Wextra ChessBoard.cc GameManager.cc -o chess.exe
 // .\chess.exe
+
+// Compile lines for Linux/Unix
+// g++ -std=c++20 -Wall -Wextra ChessBoard.cc GameManager.cc -o chess
+// .\chess
 
 #include <iostream>
 #include <sstream>
