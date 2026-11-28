@@ -43,6 +43,17 @@ class ChessBoard {
 	bool clearPath(Coordinate init, Coordinate dest, int drow, int dcol, char piece) const;
 	bool inCheck(Coordinate init, Coordinate dest, char piece) const;
 
+	// Castling
+	bool castleKingSide[2]; // 0 for white, 1 for black (index)
+	bool castleQueenSide[2];
+	bool castleCheck(Coordinate init, Coordinate dest, char piece) const;
+	void rookMovedCaptured(Coordinate pos, char piece);
+
+	// En passant
+	bool enPassant[8][8]; // Keeps track of all squares where en passant is possible
+	bool enPassantCheck(Coordinate init, Coordinate dest, char piece) const;
+	void resetEnPassant();
+
 public:
 	// Construction & display
 	ChessBoard();
@@ -57,7 +68,8 @@ public:
 	void setSlot(const std::string& coord, char piece);
 	void resetSlot(const std::string& coord);
 	char getSlot(const std::string& input) const; // input can be a4, c3, etc...
-	void moveToSlot(const std::string& init, const std::string& dest); // Move a piece from initial coordinates to destination coordinates
+	void moveToSlot(const std::string& init, const std::string& dest, char promotion = '\0'); // Move a piece from initial coordinates to destination coordinates
+	// Added a promotion argument where the default value is null, so normal moves still work
 
 	// Move pipeline entry point
 	bool boardSideChecks(const std::string& moveFrom, const std::string& moveTo, char piece) const;

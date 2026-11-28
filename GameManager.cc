@@ -190,7 +190,38 @@ void GameManager::gameOnManager(const std::string& s, std::istringstream& input)
 			return;
 		}
 		
-		board.moveToSlot(moveFrom, moveTo); // Valid move checks and pawn taking checks to be implemented
+		char piece = board.getSlot(moveFrom);
+		char promotion = '\0';
+
+		if ((piece == 'P' && moveTo[1] == '8') || (piece == 'p' && moveTo[1] == '1')) { // Checks if the pawn is about to be promoted
+			std::string choice;
+			// Check if a promotion piece was provided
+			if (!(input >> choice) || choice.length() != 1) {
+				invalidInput();
+				return;
+			}
+
+			// Makes sure only valid pieces are accepted
+			promotion = choice[0];
+			if (promotion != 'Q' && promotion != 'R' && promotion != 'B' && promotion != 'N') {
+				invalidInput();
+				return;
+			}
+
+			// Converts the promotion piece to lowercase if black is the one promoting
+			if (!whiteTurn) {
+				promotion = promotion - 'A' + 'a';
+			}
+		}
+
+		// Reject extra arguments after the piece name
+		std::string extra;
+		if (input >> extra) {
+			invalidInput();
+			return;
+		}
+
+		board.moveToSlot(moveFrom, moveTo, promotion);
 		std::cout << board;
 		whiteTurn = !whiteTurn;
 	} else {

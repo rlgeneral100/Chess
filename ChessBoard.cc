@@ -45,6 +45,11 @@ void ChessBoard::drawSetup() const {
 // Gets grid ready for a new game by copying setup grid into it
 void ChessBoard::resetBoard() {
 	copyGrid(setupGrid, grid);
+    castleKingSide[0] = true; // Sets castling rights to true for both colours on either side
+    castleKingSide[1] = true;
+    castleQueenSide[0] = true;
+    castleQueenSide[1] = true;
+	resetEnPassant(); // Resets the en passant values before a new game
 }
 
 // Clears the entire board - Obviously duh
@@ -93,17 +98,67 @@ char ChessBoard::getSlot(const std::string& input) const {
 }
 
 // Move a piece from coordinates A to B
-void ChessBoard::moveToSlot(const std::string& init, const std::string& dest) {
+void ChessBoard::moveToSlot(const std::string& init, const std::string& dest, char promotion) { // Added promotion argument
 	if (init == dest) {
         return;
     }
 
     Coordinate origin = convertCoordinate(init);
     Coordinate destination = convertCoordinate(dest);
+	char piece = grid[origin.row][origin.col];
 
-    char piece = grid[origin.row][origin.col];
-    grid[origin.row][origin.col] = '_';
-    grid[destination.row][destination.col] = piece;
+	// Keeps track of the captured piece before changing the destination
+	char captured = grid[destination.row][destination.col];
+
+	// This has to come before the original and destination square override because the check requires the destination square to be empty
+	bool isEnPassant = enPassantCheck(origin, destination, piece);
+	grid[origin.row][origin.col] = '_';
+	grid[destination.row][destination.col] = piece;
+
+	// Removes the pawn captured by en passant
+	if (isEnPassant) {
+    	grid[origin.row][destination.col] = '_';
+	}
+
+	// Disable castling rights if a king moves
+	if (piece == 'K' || piece == 'k') {
+		int side = piece == 'K' ? 0 : 1;
+		castleKingSide[side] = false;
+		castleQueenSide[side] = false;
+	}
+
+	// Disable castling rights if a rook moves
+	rookMovedCaptured(origin, piece);
+
+	// Disable castling rights if a rook is captured
+	rookMovedCaptured(destination, captured);
+
+	// Castling (for real)
+	if ((piece == 'K' || piece == 'k') && origin.row == destination.row && my_abs(destination.col - origin.col) == 2) {
+		int rookFrom, rookTo;
+		if (destination.col == 6) {
+			rookFrom = 7;
+			rookTo = 5;
+		} else {
+			rookFrom = 0;
+			rookTo = 3;
+		}
+		grid[origin.row][rookTo] = grid[origin.row][rookFrom];
+		grid[origin.row][rookFrom] = '_';
+	}
+
+	// Pawn promotion
+	if ((piece == 'P' && destination.row == 0) || (piece == 'p' && destination.row == 7)) {
+    	grid[destination.row][destination.col] = promotion;
+	}
+
+	// Resets en passant after each previous move
+	resetEnPassant();
+
+	// Sets the destination square of a pawn's en passant value to true if it has moved 2 squares
+	if ((piece == 'P' || piece == 'p') && origin.col == destination.col && my_abs(destination.row - origin.row) == 2) {
+		enPassant[destination.row][destination.col] = true;
+	}
 }
 
 // Idk if we can use <cmath> so just implemented my own abs
@@ -232,8 +287,28 @@ bool ChessBoard::inCheck(Coordinate init, Coordinate dest, char piece) const {
 	}
 
 	// Simulate the candidate move on the predicted board
+	testGrid[init.row][init.col] = '_'; // I had to swap this because the castling check function breaks if you set the destination first (it accidentally erases the king)
 	testGrid[dest.row][dest.col] = piece;
-	testGrid[init.row][init.col] = '_';
+	// Simulate en passant
+	if (enPassantCheck(init, dest, piece)) {
+    	testGrid[init.row][dest.col] = '_';
+	}
+
+	// Check rook movement when castling
+	if ((piece == 'K' || piece == 'k') && init.row == dest.row && my_abs(dest.col - init.col) == 2) {
+		int rookFrom, rookTo;
+		if (dest.col == 6) {
+			// Kingside
+			rookFrom = 7;
+			rookTo = 5;
+		} else {
+			// Queenside
+			rookFrom = 0;
+			rookTo = 3;
+		}
+		testGrid[init.row][rookTo] = testGrid[init.row][rookFrom];
+		testGrid[init.row][rookFrom] = '_';
+	}
 
 	// Find where our own king sits after the simulated move
 	char ownKingSymbol = isWhite ? 'K' : 'k';
@@ -347,6 +422,116 @@ bool ChessBoard::inCheck(Coordinate init, Coordinate dest, char piece) const {
 	return false;
 }
 
+bool ChessBoard::castleCheck(Coordinate init, Coordinate dest, char piece) const {
+    bool white = (piece == 'K');
+    int side = white ? 0 : 1; // This is to represent the index in castleKingSide
+    int row = white ? 7 : 0; // The king must be either on the top or bottom row to castle
+    char rook = white ? 'R' : 'r';
+
+    // King must start on e1 or e8
+    if (init.row != row || init.col != 4 || dest.row != row) {
+        return false;
+    }
+
+    if (dest.col == 6) {
+        // Kingside castling, checks if the rook is in the last column and that nothing is in between the king and the kingside rook
+        if (!castleKingSide[side] || grid[row][7] != rook || grid[row][5] != '_' || grid[row][6] != '_') {
+            return false;
+        }
+    } else if (dest.col == 2) {
+        // Queenside castling, checks if the rook is in the first column and that nothing is in between the king and the queenside rook
+        if (!castleQueenSide[side] || grid[row][0] != rook || grid[row][1] != '_' || grid[row][2] != '_' || grid[row][3] != '_') {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    // Makes sure the king isn't in check when trying to castle
+    if (inCheck(init, init, piece)) {
+		return false;
+	}
+
+    // Checks the square the king passes through
+    Coordinate middle;
+	middle.row = row;
+	if (dest.col == 6) {
+		middle.col = 5; // For kingside
+	} else {
+		middle.col = 3; // For queenside
+	}
+
+    if (inCheck(init, middle, piece)) {
+		return false;
+	}
+
+    // Makes sure the king cannot castle into check
+    return !inCheck(init, dest, piece);
+}
+
+// Disables castling rights if a rook moves or gets captured
+void ChessBoard::rookMovedCaptured(Coordinate pos, char piece) {
+    if (piece == 'R' && pos.row == 7) {
+        if (pos.col == 0) {
+			castleQueenSide[0] = false;
+		}
+        if (pos.col == 7) {
+			castleKingSide[0] = false;
+		}
+    }
+
+    if (piece == 'r' && pos.row == 0) {
+        if (pos.col == 0) {
+			castleQueenSide[1] = false;
+		}
+        if (pos.col == 7) {
+			castleKingSide[1] = false;
+		}
+    }
+}
+
+bool ChessBoard::enPassantCheck(Coordinate init, Coordinate dest, char piece) const {
+    // Makes sure only pawns can perform en passant
+    if (piece != 'P' && piece != 'p') {
+        return false;
+    }
+
+    // Makes sure pawns don't en passant into another piece
+    if (grid[dest.row][dest.col] != '_') {
+        return false;
+    }
+
+    // Makes sure a pawn can't en passant other pawns more than 1 square away
+    if (my_abs(dest.col - init.col) != 1) {
+        return false;
+    }
+
+    // Makes sure the pawn being en passanted just moved 2 squares
+    if (!enPassant[init.row][dest.col]) {
+        return false;
+    }
+
+    if (piece == 'P') {
+        // White en passant
+        return init.row == 3 &&
+               dest.row == init.row - 1 &&
+               grid[init.row][dest.col] == 'p';
+    } else {
+        // Black en passant
+        return init.row == 4 &&
+               dest.row == init.row + 1 &&
+               grid[init.row][dest.col] == 'P';
+    }
+}
+
+void ChessBoard::resetEnPassant() { // Resets all squares to have a value of false, this happens the move after a player or computer has the opportunity to en passant
+    for (int row = 0; row < 8; ++row) {
+        for (int col = 0; col < 8; ++col) {
+            enPassant[row][col] = false;
+        }
+    }
+}
+
 bool ChessBoard::boardSideChecks(const std::string& moveFrom, const std::string& moveTo, char piece) const {
 	Coordinate init = convertCoordinate(moveFrom);
 	Coordinate dest = convertCoordinate(moveTo);
@@ -354,6 +539,16 @@ bool ChessBoard::boardSideChecks(const std::string& moveFrom, const std::string&
 	int drow = dest.row - init.row; // delta (change in) row
 	int dcol = dest.col - init.col; // delta (change in) col
 	bool take = (grid[dest.row][dest.col] != '_');
+
+	// Castling
+    if ((piece == 'K' || piece == 'k') && drow == 0 && my_abs(dcol) == 2) {
+        return castleCheck(init, dest, piece);
+    }
+
+	// En passant
+	if (enPassantCheck(init, dest, piece)) {
+    	return !inCheck(init, dest, piece);
+	}
 
 	// Returns true only when move is valid and does NOT leave own king in check
 	return validMovePiece(drow, dcol, piece, init.row, take) &&
