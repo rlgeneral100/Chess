@@ -7,7 +7,7 @@
 
 // Compile lines for Linux/Unix
 // g++ -std=c++20 -Wall -Wextra ChessBoard.cc GameManager.cc -o chess
-// .\chess
+// ./chess
 
 #include <iostream>
 #include <sstream>
