@@ -14,7 +14,7 @@ class ChessBoard {
 	char grid[8][8];
 	char setupGrid[8][8]; // This may be used to save user custom setup grid
 	// The base immutable chess placement
-	static constexpr char originGrid[8][8] = {
+	inline static constexpr char originGrid[8][8] = {
         {'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'}, // 8 (row 0) - Black pieces
         {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'}, // 7 (row 1)
         {'_', '_', '_', '_', '_', '_', '_', '_'}, // 6 (row 2)
